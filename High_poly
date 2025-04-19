@@ -1,0 +1,43 @@
+import maya.cmds as cmds    #Python ,open maya 2 ,pymel (speed down)
+def can_undo(func):
+    def wrapper(*args, **kwargs):
+        cmds.undoInfo(openChunk=True,)
+        result = func(*args, **kwargs)
+        cmds.undoInfo(closeChunk=True)
+        return result
+    return wrapper
+@can_undo
+def Detect_HighPoly_Meshs(min_vtx_num):
+    # All_transform = cmds.ls(type='transform')
+    # for i in All_transform:
+    #     print(cmds.listRelatives(i,shapes=1,ni=1,type='mesh'))
+
+    all_Shapes = cmds.ls(type = 'mesh')
+    all_transforms = []
+    for i in all_Shapes:
+        all_transforms.append(cmds.listRelatives(i,p=1)[0])
+
+    heavy_shapes = []
+    for mesh in list(dict.fromkeys(all_transforms)):
+        # print(len(cmds.ls(f'{mesh}.vtx[*]',fl=1)))
+        vtx_num = cmds.polyEvaluate(mesh,v=1)
+        if vtx_num >= min_vtx_num:
+            heavy_shapes.append(mesh)
+
+    message = ''
+    for i in heavy_shapes:
+        message += f'\n- {i}'
+
+    cmds.confirmDialog(ann = 'ok',db='OK',m=message,t='High Poly Meshs')
+
+#Detect_HighPoly_Meshs(50)
+windows=cmds.window('HighPolyMeshs',w=300,h=300)
+cmds.columnLayout(adjustableColumn=True)
+cmds.text(label='High Poly Meshs')
+min_vts_input=cmds.textFieldGrp(label='Min Vtx Num',ed=1,tx='write here ')
+min_vts=cmds.textFieldGrp(min_vts_input,q=1,tx=1)
+min_vts=int(min_vts) if min_vts.isdigit() else 0
+cmds.button(label='Detect High Poly Meshs',c='Detect_HighPoly_Meshs((min_vts))')
+cmds.showWindow(windows)
+
+    

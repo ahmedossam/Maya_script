@@ -1,0 +1,27 @@
+import maya.cmds as cmds
+
+def can_undo(func):
+    def wrapper(*args, **kwargs):
+        cmds.undoInfo(openChunk=True,)
+        result = func(*args, **kwargs)
+        cmds.undoInfo(closeChunk=True)
+        return result
+    return wrapper
+@can_undo
+def DetectMesh(VTX_count):
+    """
+    Detects the selected mesh objects in the Maya scene and returns a list of their names.
+    """
+    selected_objects = cmds.ls(selection=True, long=True)
+    mesh_objects = []
+    for obj in selected_objects:
+        if cmds.objectType(obj) == "mesh":
+            VTX_count = cmds.polyEvaluate(obj, vertex=True)
+            if VTX_count > 0:
+                mesh_objects.append(obj)
+                print(f"Mesh object detected: {obj} with {VTX_count} vertices.")
+            else:
+                print(f"Object {obj} is not a valid mesh or has no vertices.")
+            
+    return mesh_objects
+DetectMesh(1000)
